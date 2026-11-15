@@ -143,7 +143,7 @@
   <button class="big-btn btn-double" id="btnDouble">二壘安打<small>打者上二壘，跑者推進 2 壘</small></button>
   <button class="big-btn btn-hr" id="btnHR">全壘打<small>全員得分，清空壘包</small></button>
   <button class="big-btn btn-out" id="btnOut">出局<small>出局 +1，跑者保持原位</small></button>
-  <button class="big-btn btn-dp" id="btnDP">雙殺<small>出局 +1，最低壘跑者出局</small></button>
+  <button class="big-btn btn-dp" id="btnDP">雙殺<small>出局 +1，殺最靠近本壘的跑者</small></button>
   <button class="btn-rollback" id="btnRollback" disabled>↩️ 回滾上一步</button>
   <div class="watch-label">壘包（點一下切換有人 / 無人）</div>
   <div class="diamond" id="wDiamond">
@@ -354,13 +354,13 @@ function doOut() {
   mutate(() => addOut(), '出局');
 }
 function doDoublePlay() {
-  // 依規則定義：出局數 +1，且壘上最低壘位的跑者出局，其他跑者不推進。
-  // 若你希望雙殺一次加 2 個出局，請告訴我，我再改成 +2。
+  // 雙殺：出局數 +1，且殺最靠近本壘的跑者（離得分最近者優先：三壘 > 二壘 > 一壘），其他跑者不推進。
+  // 壘上沒人時也只加 1 個出局，不會多扣也不會出錯。
   mutate(() => {
     const b = state.bases;
-    if (b.first) b.first = false;
+    if (b.third) b.third = false;
     else if (b.second) b.second = false;
-    else if (b.third) b.third = false;
+    else if (b.first) b.first = false;
     addOut();
   }, '雙殺');
 }
