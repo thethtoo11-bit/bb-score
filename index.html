@@ -77,8 +77,9 @@
   .vs{font-size:20px;color:#64748b;font-weight:800;text-align:center}
   .vs .inning{font-size:clamp(22px,3vw,34px);color:#fff;margin-top:6px}
   .vs .half{font-size:clamp(18px,2.4vw,26px);color:#fbbf24;font-weight:900}
-  table.score-table{width:100%;border-collapse:collapse;margin:14px 0 10px;font-size:clamp(16px,2.2vw,26px);text-align:center}
-  table.score-table th,table.score-table td{padding:10px 4px;border:1px solid #263244}
+  .score-table-wrap{overflow-x:auto;margin:14px 0 10px}
+  table.score-table{width:100%;border-collapse:collapse;font-size:clamp(16px,2.2vw,26px);text-align:center}
+  table.score-table th,table.score-table td{padding:10px 4px;border:1px solid #263244;min-width:44px}
   table.score-table th{background:#111827;color:#9aa7b8}
   table.score-table td{background:#0b1220;font-weight:800}
   table.score-table td.total-cell{background:#1e293b;color:#facc15}
@@ -178,7 +179,7 @@
       <div class="total" id="bHomeScore">0</div>
     </div>
   </div>
-  <table class="score-table" id="scoreTable"></table>
+  <div class="score-table-wrap"><table class="score-table" id="scoreTable"></table></div>
   <div class="board-bottom">
     <div class="bso">
       <div class="bso-group"><div class="label">出局 O</div><div class="lamps" id="lampsO"></div></div>
@@ -191,7 +192,7 @@
     </div>
   </div>
   <div class="board-note" id="bLastAction">還沒有操作</div>
-  <div class="board-note">由手錶控制器即時同步 · <a href="./" style="color:#60a5fa">回首頁</a></div>
+  <div class="board-note">局數無上限，延長賽自動加欄 · 由手錶控制器即時同步 · <a href="./" style="color:#60a5fa">回首頁</a></div>
 </section>
 
 <script type="module">
@@ -311,6 +312,7 @@ function addRun(side) {
   }
 }
 function endHalf() {
+  // 局數無上限：下半局結束局數 +1，不設 9 局上限，可一直打延長賽
   state.bases = { first: false, second: false, third: false };
   state.balls = 0; state.strikes = 0; state.outs = 0;
   if (state.isTop) { state.isTop = false; }
@@ -417,6 +419,8 @@ function renderLamps(id, count, max, cls) {
   [...box.children].forEach((el, i) => el.classList.toggle(cls, i < count));
 }
 function renderTable() {
+  // 局數無上限：表格欄數跟著目前局數走，超過 9 局自動加欄（10、11、12…），
+  // 前 9 局仍先顯示 9 欄，超過後可橫向捲動，不會把字擠小
   const n = Math.max(9, state.inning, state.awayInnings.length, state.homeInnings.length);
   let html = '<tr><th></th>';
   for (let i = 1; i <= n; i++) html += '<th>' + i + '</th>';
