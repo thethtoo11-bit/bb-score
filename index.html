@@ -143,7 +143,7 @@
   <button class="big-btn btn-double" id="btnDouble">二壘安打<small>打者上二壘，跑者推進 2 壘</small></button>
   <button class="big-btn btn-hr" id="btnHR">全壘打<small>全員得分，清空壘包</small></button>
   <button class="big-btn btn-out" id="btnOut">出局<small>出局 +1，跑者保持原位</small></button>
-  <button class="big-btn btn-dp" id="btnDP">雙殺<small>出局 +1，殺最靠近本壘的跑者</small></button>
+  <button class="big-btn btn-dp" id="btnDP">雙殺<small>出局 +2，殺最靠近本壘的跑者</small></button>
   <button class="btn-rollback" id="btnRollback" disabled>↩️ 回滾上一步</button>
   <div class="watch-label">壘包（點一下切換有人 / 無人）</div>
   <div class="diamond" id="wDiamond">
@@ -354,14 +354,17 @@ function doOut() {
   mutate(() => addOut(), '出局');
 }
 function doDoublePlay() {
-  // 雙殺：出局數 +1，且殺最靠近本壘的跑者（離得分最近者優先：三壘 > 二壘 > 一壘），其他跑者不推進。
-  // 壘上沒人時也只加 1 個出局，不會多扣也不會出錯。
+  // 雙殺：打者出局 + 殺最靠近本壘的跑者（優先順序三壘 > 二壘 > 一壘），共 2 個出局，其他跑者不推進。
+  // 壘上沒人時沒有跑者可殺，只算打者出局 1 個。一次加 2 個出局要直接判斷換半局，
+  // 不能連叫兩次 addOut()，否則 2 出局時第一個出局就換半局、出局歸零，第二個出局會錯誤帶到下半局。
   mutate(() => {
     const b = state.bases;
-    if (b.third) b.third = false;
-    else if (b.second) b.second = false;
-    else if (b.first) b.first = false;
-    addOut();
+    let killed = false;
+    if (b.third) { b.third = false; killed = true; }
+    else if (b.second) { b.second = false; killed = true; }
+    else if (b.first) { b.first = false; killed = true; }
+    state.outs += killed ? 2 : 1;
+    if (state.outs >= 3) endHalf();
   }, '雙殺');
 }
 function doUndo() {
