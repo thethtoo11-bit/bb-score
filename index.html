@@ -101,6 +101,12 @@
   .board-diamond .b3{top:69px;left:0}
   .board-diamond .home{position:absolute;bottom:0;left:69px;width:52px;height:52px;transform:rotate(45deg);border-radius:10px;background:#334155;border:4px solid #64748b}
   .board-note{text-align:center;color:#64748b;font-size:13px;margin-top:10px}
+  .fx-test{background:none;border:none;color:#60a5fa;font-size:13px;text-decoration:underline;padding:0}
+  /* ---------- 全壘打特效（只在看板端） ---------- */
+  #fwCanvas{position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:9998}
+  #hrBanner{position:fixed;top:34%;left:0;right:0;text-align:center;pointer-events:none;z-index:9999;font-size:clamp(48px,9vw,110px);font-weight:900;color:#facc15;text-shadow:0 0 30px rgba(250,204,21,.8),0 4px 0 #b45309;opacity:0}
+  #hrBanner.show{animation:hrpop 2.6s ease forwards}
+  @keyframes hrpop{0%{opacity:0;transform:scale(.5)}12%{opacity:1;transform:scale(1.15)}22%{transform:scale(1)}80%{opacity:1}100%{opacity:0;transform:scale(1.05)}}
   @media (max-width:520px){
     #board{padding:10px}
     .score-row{gap:10px}
@@ -192,8 +198,12 @@
     </div>
   </div>
   <div class="board-note" id="bLastAction">還沒有操作</div>
-  <div class="board-note">局數無上限，延長賽自動加欄 · 由手錶控制器即時同步 · <a href="./" style="color:#60a5fa">回首頁</a></div>
+  <div class="board-note">局數無上限，延長賽自動加欄 · 由手錶控制器即時同步 · <button class="fx-test" id="testFx">🎆 測試全壘打特效</button> · <a href="./" style="color:#60a5fa">回首頁</a></div>
 </section>
+
+<!-- 全壘打特效：煙花畫布 + 大字橫幅（只在看板端使用） -->
+<canvas id="fwCanvas" class="hidden"></canvas>
+<div id="hrBanner">🎉 全壘打！🎉</div>
 
 <script type="module">
 /* ============================================================
@@ -382,6 +392,94 @@ function doReset() {
   saveState(); renderAll();
 }
 
+/* ---------- 全壘打特效（只在看板端，純程式碼：Canvas 煙花 + WebAudio 合成歡呼，不用圖片/音檔） ---------- */
+let audioCtx = null;
+function unlockAudio() {
+  // iPad Safari 要先有一次使用者手勢才能出聲；點看板任何地方（或測試按鈕）就會解鎖
+  try {
+    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+  } catch (e) {}
+}
+function playCheer() {
+  if (!audioCtx || audioCtx.state !== 'running') return;
+  try {
+    const t = audioCtx.currentTime, dur = 2.8, sr = audioCtx.sampleRate;
+    // 歡呼聲：帶通濾波後的雜訊，音量先衝高再慢慢退，像觀眾席的吼聲
+    const buf = audioCtx.createBuffer(1, Math.floor(sr * dur), sr);
+    const d = buf.getChannelData(0);
+    let last = 0;
+    for (let i = 0; i < d.length; i++) { const w = Math.random() * 2 - 1; last = (last + 0.02 * w) / 1.02; d[i] = last * 3.5; }
+    const src = audioCtx.createBufferSource(); src.buffer = buf;
+    const bp = audioCtx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 900; bp.Q.value = 0.6;
+    const g = audioCtx.createGain();
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(0.5, t + 0.25);
+    g.gain.setValueAtTime(0.5, t + 1.2);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    src.connect(bp); bp.connect(g); g.connect(audioCtx.destination);
+    src.start();
+    // 口哨聲點綴
+    const o = audioCtx.createOscillator(); o.type = 'sine';
+    o.frequency.setValueAtTime(2200, t + 0.1);
+    o.frequency.linearRampToValueAtTime(2900, t + 0.6);
+    const og = audioCtx.createGain();
+    og.gain.setValueAtTime(0.0001, t + 0.1);
+    og.gain.exponentialRampToValueAtTime(0.07, t + 0.25);
+    og.gain.exponentialRampToValueAtTime(0.0001, t + 1.0);
+    o.connect(og); og.connect(audioCtx.destination);
+    o.start(t + 0.1); o.stop(t + 1.1);
+  } catch (e) {}
+}
+let fwParticles = [], fwRaf = null, fwEndAt = 0;
+function sizeFwCanvas() { const c = $('fwCanvas'); c.width = window.innerWidth; c.height = window.innerHeight; }
+function fwBurst(x, y) {
+  const colors = ['#facc15', '#f87171', '#60a5fa', '#4ade80', '#c084fc', '#fb923c'];
+  const color = colors[Math.floor(Math.random() * colors.length)];
+  const n = 55 + Math.floor(Math.random() * 30);
+  for (let i = 0; i < n; i++) {
+    const a = Math.random() * Math.PI * 2, sp = 2 + Math.random() * 6;
+    fwParticles.push({ x, y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, life: 1, decay: 0.008 + Math.random() * 0.012, color, size: 2 + Math.random() * 3 });
+  }
+}
+function fwTick() {
+  const c = $('fwCanvas'), ctx = c.getContext('2d');
+  ctx.clearRect(0, 0, c.width, c.height);
+  const now = performance.now();
+  if (now < fwEndAt && Math.random() < 0.35) fwBurst(Math.random() * c.width * 0.8 + c.width * 0.1, Math.random() * c.height * 0.45 + c.height * 0.08);
+  fwParticles = fwParticles.filter((p) => p.life > 0);
+  for (const p of fwParticles) {
+    p.x += p.vx; p.y += p.vy; p.vy += 0.05; p.vx *= 0.99; p.vy *= 0.99; p.life -= p.decay;
+    ctx.globalAlpha = Math.max(0, p.life);
+    ctx.fillStyle = p.color;
+    ctx.beginPath(); ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2); ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  if (fwParticles.length || now < fwEndAt) { fwRaf = requestAnimationFrame(fwTick); }
+  else { fwRaf = null; $('fwCanvas').classList.add('hidden'); }
+}
+function celebrateHR() {
+  if (role !== 'board') return;
+  sizeFwCanvas();
+  $('fwCanvas').classList.remove('hidden');
+  fwParticles = [];
+  fwEndAt = performance.now() + 3200; // 約 3.2 秒煙花
+  if (!fwRaf) fwRaf = requestAnimationFrame(fwTick);
+  const banner = $('hrBanner');
+  banner.classList.remove('show'); void banner.offsetWidth; // 重播動畫
+  banner.classList.add('show');
+  playCheer();
+}
+// 觸發判斷：只認「新出現」的全壘打。history 長度 + 上一步文字當作 key，
+// 每次 render 都更新，第一次載入（primed 前）不觸發，避免重整頁面把舊全壘打再播一次。
+let lastSeenKey = '', celebrationPrimed = false;
+function maybeCelebrateHR() {
+  if (role !== 'board') return;
+  const key = state.history.length + '|' + state.lastAction;
+  if (celebrationPrimed && key !== lastSeenKey && state.lastAction === '全壘打') celebrateHR();
+  lastSeenKey = key; celebrationPrimed = true;
+}
+
 /* ---------- 渲染 ---------- */
 function renderAll() {
   // 手錶
@@ -413,6 +511,7 @@ function renderAll() {
   $('wRoom').textContent = '場次：' + room + ' · ' + mode;
   $('bRoom').textContent = '場次：' + room;
   $('bMode').textContent = mode;
+  maybeCelebrateHR();
 }
 function renderLamps(id, count, max, cls) {
   const box = $(id); if (!box) return;
@@ -497,6 +596,8 @@ function bindWatch() {
 function bindBoard() {
   $('bAwayName').onclick = () => editTeam('away');
   $('bHomeName').onclick = () => editTeam('home');
+  $('testFx').onclick = () => { unlockAudio(); celebrateHR(); };
+  document.addEventListener('pointerdown', unlockAudio);
   $('wakeBtn').onclick = async () => {
     if ($('wakeBtn').classList.contains('on') && wakeLock) { try { await wakeLock.release(); } catch (e) {} return; }
     await requestWakeLock();
