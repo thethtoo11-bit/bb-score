@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>私人棒球計分板</title>
+<style>
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{margin:0;padding:0;background:#070b12;color:#f2f5f9;font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Microsoft JhengHei",sans-serif}
+  body{touch-action:manipulation}
+  button{font-family:inherit;touch-action:manipulation;cursor:pointer;border:none}
+  .hidden{display:none!important}
+  .muted{color:#9aa7b8;font-size:13px}
+  /* ---------- 首頁 ---------- */
+  #home{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center}
+  #home h1{font-size:34px;margin:6px 0 4px}
+  #home p{color:#9aa7b8;margin:4px 0 22px}
+  .room-box{width:min(420px,100%);background:#111827;border:1px solid #263244;border-radius:16px;padding:18px;margin-bottom:18px;text-align:left}
+  .room-box label{display:block;font-size:14px;color:#9aa7b8;margin-bottom:8px}
+  .room-box input{width:100%;font-size:22px;padding:12px 14px;border-radius:10px;border:1px solid #334155;background:#0b1220;color:#fff;outline:none}
+  .home-btn{display:block;width:min(420px,100%);padding:20px;border-radius:16px;font-size:22px;font-weight:800;margin:10px 0;color:#fff}
+  .home-btn.board{background:#2563eb}
+  .home-btn.watch{background:#059669}
+  .home-btn:active{transform:scale(.98);opacity:.9}
+  .home-hint{font-size:13px;color:#7d8aa0;max-width:420px;line-height:1.6}
+  /* ---------- 手錶 ---------- */
+  #watch{max-width:400px;margin:0 auto;min-height:100vh;padding:10px 12px 16px;background:#070b12}
+  .watch-status{background:#111827;border:1px solid #263244;border-radius:14px;padding:10px 12px;text-align:center;margin-bottom:10px}
+  .watch-status .line1{font-size:19px;font-weight:800;letter-spacing:.5px}
+  .watch-status .line2{font-size:15px;color:#fbbf24;margin-top:4px;font-weight:700}
+  .watch-status .line3{font-size:17px;margin-top:4px;font-weight:800}
+  .watch-room{text-align:center;font-size:12px;color:#7d8aa0;margin-bottom:10px}
+  .big-btn{display:block;width:100%;padding:18px 10px;border-radius:16px;font-size:24px;font-weight:900;margin:8px 0;color:#111}
+  .big-btn small{display:block;font-size:13px;font-weight:600;opacity:.75;margin-top:2px}
+  .big-btn:active{transform:scale(.97);filter:brightness(1.15)}
+  .btn-strike{background:#facc15}
+  .btn-ball{background:#4ade80}
+  .btn-out{background:#f87171}
+  .btn-score{background:#60a5fa;color:#fff}
+  .watch-label{text-align:center;font-size:13px;color:#9aa7b8;margin:14px 0 6px;font-weight:700}
+  /* 菱形壘包 */
+  .diamond{position:relative;width:132px;height:132px;margin:6px auto}
+  .diamond .base{position:absolute;width:36px;height:36px;transform:rotate(45deg);border-radius:7px;background:#1f2937;border:3px solid #475569}
+  .diamond .base.on{background:#facc15;border-color:#fde047;box-shadow:0 0 14px #facc15}
+  .diamond .b2{top:0;left:48px}
+  .diamond .b1{top:48px;right:0}
+  .diamond .b3{top:48px;left:0}
+  .diamond .home{position:absolute;bottom:0;left:48px;width:36px;height:36px;transform:rotate(45deg);border-radius:7px;background:#334155;border:3px solid #64748b}
+  .diamond .base-label{position:absolute;font-size:11px;color:#9aa7b8;font-weight:700}
+  .watch-actions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:14px}
+  .watch-actions button{padding:13px 4px;border-radius:12px;font-size:16px;font-weight:800;background:#1e293b;color:#fff;border:1px solid #334155}
+  .watch-actions button.danger.armed{background:#dc2626;border-color:#ef4444;animation:pulse 1s infinite}
+  @keyframes pulse{50%{opacity:.6}}
+  .watch-foot{text-align:center;font-size:12px;color:#64748b;margin-top:14px;line-height:1.6}
+  /* ---------- 看板 ---------- */
+  #board{min-height:100vh;padding:14px 22px 18px;background:radial-gradient(1200px 600px at 50% -10%,#12233d 0%,#070b12 60%)}
+  .board-top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
+  .board-title{font-size:15px;color:#9aa7b8;letter-spacing:2px}
+  .board-title b{color:#fff;font-size:18px}
+  .wake-btn{padding:10px 14px;border-radius:999px;background:#1e293b;color:#e2e8f0;border:1px solid #475569;font-size:14px;font-weight:700}
+  .wake-btn.on{background:#166534;border-color:#22c55e;color:#bbf7d0}
+  .score-row{display:flex;align-items:center;justify-content:center;gap:28px;margin:8px 0 4px}
+  .team{flex:1;text-align:center;min-width:0}
+  .team .name{font-size:clamp(28px,4.5vw,54px);font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;border-bottom:2px dashed #475569;padding-bottom:4px}
+  .team .name:active{color:#facc15}
+  .team .total{font-size:clamp(72px,13vw,150px);font-weight:900;line-height:1;color:#fff;text-shadow:0 0 30px rgba(96,165,250,.35)}
+  .team.away .total{color:#fde68a}
+  .team.home .total{color:#bfdbfe}
+  .vs{font-size:20px;color:#64748b;font-weight:800;text-align:center}
+  .vs .inning{font-size:clamp(22px,3vw,34px);color:#fff;margin-top:6px}
+  .vs .half{font-size:clamp(18px,2.4vw,26px);color:#fbbf24;font-weight:900}
+  table.score-table{width:100%;border-collapse:collapse;margin:14px 0 10px;font-size:clamp(16px,2.2vw,26px);text-align:center}
+  table.score-table th,table.score-table td{padding:10px 4px;border:1px solid #263244}
+  table.score-table th{background:#111827;color:#9aa7b8}
+  table.score-table td{background:#0b1220;font-weight:800}
+  table.score-table td.total-cell{background:#1e293b;color:#facc15}
+  table.score-table td.team-cell{text-align:left;padding-left:14px;cursor:pointer;min-width:110px}
+  .board-bottom{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap;margin-top:6px}
+  .bso{display:flex;gap:22px}
+  .bso-group{text-align:center}
+  .bso-group .label{font-size:16px;color:#9aa7b8;font-weight:800;margin-bottom:8px}
+  .lamps{display:flex;gap:8px;justify-content:center}
+  .lamp{width:34px;height:34px;border-radius:50%;background:#1f2937;border:2px solid #475569}
+  .lamp.on-b{background:#22c55e;border-color:#86efac;box-shadow:0 0 18px #22c55e}
+  .lamp.on-s{background:#eab308;border-color:#fde047;box-shadow:0 0 18px #eab308}
+  .lamp.on-o{background:#ef4444;border-color:#fca5a5;box-shadow:0 0 18px #ef4444}
+  .board-diamond{position:relative;width:190px;height:190px;flex:none}
+  .board-diamond .base{position:absolute;width:52px;height:52px;transform:rotate(45deg);border-radius:10px;background:#1f2937;border:4px solid #475569}
+  .board-diamond .base.on{background:#facc15;border-color:#fde047;box-shadow:0 0 26px #facc15}
+  .board-diamond .b2{top:0;left:69px}
+  .board-diamond .b1{top:69px;right:0}
+  .board-diamond .b3{top:69px;left:0}
+  .board-diamond .home{position:absolute;bottom:0;left:69px;width:52px;height:52px;transform:rotate(45deg);border-radius:10px;background:#334155;border:4px solid #64748b}
+  .board-note{text-align:center;color:#64748b;font-size:13px;margin-top:10px}
+  @media (max-width:520px){
+    #board{padding:10px}
+    .score-row{gap:10px}
+    .bso{gap:12px}
+    .lamp{width:26px;height:26px}
+    .board-diamond{width:140px;height:140px}
+    .board-diamond .base,.board-diamond .home{width:38px;height:38px}
+    .board-diamond .b2,.board-diamond .home{left:51px}
+    .board-diamond .b1,.board-diamond .b3{top:51px}
+  }
+</style>
+</head>
+<body>
+
+<!-- 首頁 -->
+<section id="home">
+  <div style="font-size:52px">⚾</div>
+  <h1>私人棒球計分板</h1>
+  <p>手錶遙控 · iPad 即時看板 · 同一場次自動同步</p>
+  <div class="room-box">
+    <label for="roomInput">場次代碼（同一場比賽的裝置請填相同代碼）</label>
+    <input id="roomInput" value="game1" maxlength="30" autocomplete="off">
+  </div>
+  <button class="home-btn board" id="goBoard">📺 開啟 iPad 計分板</button>
+  <button class="home-btn watch" id="goWatch">⌚ 開啟手錶控制器</button>
+  <p class="home-hint">測試模式已開啟（localStorage 同步）：在同一台電腦開兩個分頁，分別加上 ?w 與 ?b 即可測試（舊的 ?role=watch / ?role=board 也能用）。正式上線再填 Firebase 金鑰並把 USE_LOCAL_MOCK 改為 false。</p>
+  <p class="home-hint" id="homeMode"></p>
+</section>
+
+<!-- 手錶控制端 -->
+<section id="watch" class="hidden">
+  <div class="watch-status">
+    <div class="line1" id="wInning">1局上</div>
+    <div class="line2" id="wCount">0B 0S 0O</div>
+    <div class="line3" id="wScore">客 0 : 0 主</div>
+  </div>
+  <div class="watch-room" id="wRoom">場次：game1 · 測試模式</div>
+  <button class="big-btn btn-strike" id="btnStrike">好球 +1<small>滿 3 好球 → 出局 +1</small></button>
+  <button class="big-btn btn-ball" id="btnBall">壞球 +1<small>滿 4 壞球 → 保送推進</small></button>
+  <button class="big-btn btn-out" id="btnOut">出局 +1<small>滿 3 出局 → 換半局</small></button>
+  <button class="big-btn btn-score" id="btnScore">得分 +1<small id="wScoreHint">目前進攻：客隊</small></button>
+  <div class="watch-label">壘包（點一下切換有人 / 無人）</div>
+  <div class="diamond" id="wDiamond">
+    <div class="base b2" data-base="second" role="button" aria-label="二壘"></div>
+    <div class="base b1" data-base="first" role="button" aria-label="一壘"></div>
+    <div class="base b3" data-base="third" role="button" aria-label="三壘"></div>
+    <div class="home"></div>
+  </div>
+  <div class="watch-actions">
+    <button id="btnUndo">↩️ 復原</button>
+    <button id="btnChangeHalf">🔄 手動換局</button>
+    <button id="btnReset" class="danger">🗑️ 重設比賽</button>
+  </div>
+  <div class="watch-foot">點「重設」兩次才會真的重設，避免誤觸。<br><a href="./" style="color:#60a5fa">回首頁</a></div>
+</section>
+
+<!-- iPad 看板端 -->
+<section id="board" class="hidden">
+  <div class="board-top">
+    <div class="board-title"><b>⚾ 私人棒球計分板</b><br><span id="bRoom">場次：game1</span> · <span id="bMode">測試模式</span> · 點隊名可改名</div>
+    <button class="wake-btn" id="wakeBtn">🌙 開啟防休眠</button>
+  </div>
+  <div class="score-row">
+    <div class="team away">
+      <div class="name" id="bAwayName" title="點一下改隊名">客隊</div>
+      <div class="total" id="bAwayScore">0</div>
+    </div>
+    <div class="vs">VS
+      <div class="inning" id="bInning">1局</div>
+      <div class="half" id="bHalf">▲ 上半局</div>
+    </div>
+    <div class="team home">
+      <div class="name" id="bHomeName" title="點一下改隊名">主隊</div>
+      <div class="total" id="bHomeScore">0</div>
+    </div>
+  </div>
+  <table class="score-table" id="scoreTable"></table>
+  <div class="board-bottom">
+    <div class="bso">
+      <div class="bso-group"><div class="label">壞球 B</div><div class="lamps" id="lampsB"></div></div>
+      <div class="bso-group"><div class="label">好球 S</div><div class="lamps" id="lampsS"></div></div>
+      <div class="bso-group"><div class="label">出局 O</div><div class="lamps" id="lampsO"></div></div>
+    </div>
+    <div class="board-diamond" id="bDiamond">
+      <div class="base b2" data-base="second"></div>
+      <div class="base b1" data-base="first"></div>
+      <div class="base b3" data-base="third"></div>
+      <div class="home"></div>
+    </div>
+  </div>
+  <div class="board-note">由手錶控制器即時同步 · <a href="./" style="color:#60a5fa">回首頁</a></div>
+</section>
+
+<script type="module">
+/* ============================================================
+   Firebase 設定 — 在這裡貼上你的金鑰
+   1. 到 Firebase Console 建立專案 → Realtime Database
+   2. 把下面 firebaseConfig 換成你自己的設定
+   3. 把 USE_LOCAL_MOCK 改為 false，就切換為雲端跨裝置同步
+   ============================================================ */
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
+  projectId: "YOUR_PROJECT",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+const USE_LOCAL_MOCK = true; // true = localStorage 同瀏覽器跨分頁測試；false = Firebase 雲端跨裝置同步
+
+const params = new URLSearchParams(location.search);
+// 短參數路由：?w / ?b、?role=w / ?role=b、?role=watch / ?role=board 都支援
+// ?w、?watch 單獨出現（無值）也算；舊的 ?role=watch / ?role=board 繼續可用
+const rawRole = (params.get('role') || params.get('r') || '').toLowerCase();
+const role =
+  rawRole === 'watch' || rawRole === 'w' || params.has('w') || params.has('watch') ? 'watch' :
+  rawRole === 'board' || rawRole === 'b' || params.has('b') || params.has('board') ? 'board' : null;
+// 場次代碼：?room=game1 或短寫 ?g=game1；不填則預設 game1，所以 ?w 單獨用也行
+const room = ((params.get('room') || params.get('g') || 'game1').trim()) || 'game1';
+const $ = (id) => document.getElementById(id);
+const clone = (o) => JSON.parse(JSON.stringify(o));
+
+function defaultState() {
+  return {
+    awayName: '客隊', homeName: '主隊',
+    inning: 1, isTop: true,
+    awayScore: 0, homeScore: 0,
+    awayInnings: Array(9).fill(0), homeInnings: Array(9).fill(0),
+    balls: 0, strikes: 0, outs: 0,
+    bases: { first: false, second: false, third: false },
+    history: []
+  };
+}
+let state = defaultState();
+let lastSavedJson = '';
+let firebaseDb = null, firebaseRef = null, firebaseLib = null;
+let bc = null;
+try { bc = new BroadcastChannel('baseball-scoreboard:' + room); } catch (e) {}
+
+/* ---------- 同步層 ---------- */
+function storageKey() { return 'baseball-scoreboard:' + room; }
+
+async function initSync() {
+  if (USE_LOCAL_MOCK) {
+    try {
+      const raw = localStorage.getItem(storageKey());
+      if (raw) { const parsed = JSON.parse(raw); if (parsed && typeof parsed.inning === 'number') state = parsed; }
+    } catch (e) {}
+    window.addEventListener('storage', (e) => {
+      if (e.key === storageKey() && e.newValue) {
+        try { const parsed = JSON.parse(e.newValue); if (JSON.stringify(parsed) !== JSON.stringify(state)) { state = parsed; renderAll(); } } catch (err) {}
+      }
+    });
+    if (bc) bc.onmessage = (e) => {
+      if (e.data && JSON.stringify(e.data) !== JSON.stringify(state)) { state = e.data; renderAll(); }
+    };
+    saveState(true); // 確保初始狀態寫入，另一分頁能讀到
+    return;
+  }
+  // Firebase 模式
+  try {
+    const appMod = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js');
+    const dbMod = await import('https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js');
+    firebaseLib = dbMod;
+    const app = appMod.initializeApp(firebaseConfig);
+    firebaseDb = dbMod.getDatabase(app);
+    firebaseRef = dbMod.ref(firebaseDb, 'rooms/' + room + '/state');
+    dbMod.onValue(firebaseRef, (snap) => {
+      const val = snap.val();
+      if (val && JSON.stringify(val) !== lastSavedJson) { state = val; if (!Array.isArray(state.history)) state.history = []; renderAll(); }
+    });
+  } catch (e) {
+    alert('Firebase 連線失敗，請檢查 firebaseConfig 與網路，暫時改回本機測試模式。');
+    console.error(e);
+  }
+}
+
+function saveState(isInitial) {
+  const json = JSON.stringify(state);
+  lastSavedJson = json;
+  if (USE_LOCAL_MOCK) {
+    try { localStorage.setItem(storageKey(), json); } catch (e) {}
+    try { if (bc && !isInitial) bc.postMessage(state); } catch (e) {}
+    return;
+  }
+  if (firebaseRef && firebaseLib) {
+    firebaseLib.set(firebaseRef, state).catch((e) => console.error('Firebase 寫入失敗', e));
+  }
+}
+
+/* ---------- 核心規則 ---------- */
+function pushHistory() {
+  const snap = clone(state); delete snap.history;
+  state.history.push(snap);
+  if (state.history.length > 15) state.history = state.history.slice(-15);
+}
+function battingSide() { return state.isTop ? 'away' : 'home'; }
+function addRun(side) {
+  const idx = state.inning - 1;
+  if (side === 'away') {
+    while (state.awayInnings.length <= idx) state.awayInnings.push(0);
+    state.awayInnings[idx]++; state.awayScore++;
+  } else {
+    while (state.homeInnings.length <= idx) state.homeInnings.push(0);
+    state.homeInnings[idx]++; state.homeScore++;
+  }
+}
+function endHalf() {
+  state.bases = { first: false, second: false, third: false };
+  state.balls = 0; state.strikes = 0; state.outs = 0;
+  if (state.isTop) { state.isTop = false; }
+  else { state.isTop = true; state.inning++; }
+}
+function mutate(fn) { pushHistory(); fn(); saveState(); renderAll(); }
+function doStrike() {
+  mutate(() => {
+    state.strikes++;
+    if (state.strikes >= 3) {
+      state.strikes = 0; state.balls = 0; state.outs++;
+      if (state.outs >= 3) endHalf();
+    }
+  });
+}
+function doBall() {
+  mutate(() => {
+    state.balls++;
+    if (state.balls >= 4) {
+      state.balls = 0; state.strikes = 0;
+      const b = state.bases;
+      if (b.first && b.second && b.third) {
+        addRun(battingSide()); // 滿壘保送，進攻方 +1 分，壘包維持滿壘
+      } else if (b.first && b.second) {
+        b.third = true; b.second = true; b.first = true;
+      } else if (b.first) {
+        b.second = true; b.first = true;
+      } else {
+        b.first = true;
+      }
+    }
+  });
+}
+function doOut() {
+  mutate(() => { state.outs++; if (state.outs >= 3) endHalf(); });
+}
+function doScore() { mutate(() => addRun(battingSide())); }
+function doUndo() {
+  const prev = state.history.pop();
+  if (!prev) return;
+  const h = state.history;
+  state = prev; state.history = h;
+  saveState(); renderAll();
+}
+function doReset() {
+  const names = { awayName: state.awayName, homeName: state.homeName };
+  state = defaultState();
+  state.awayName = names.awayName; state.homeName = names.homeName;
+  saveState(); renderAll();
+}
+
+/* ---------- 渲染 ---------- */
+function renderAll() {
+  // 手錶
+  $('wInning').textContent = state.inning + '局' + (state.isTop ? '上' : '下');
+  $('wCount').textContent = state.balls + 'B ' + state.strikes + 'S ' + state.outs + 'O';
+  $('wScore').textContent = state.awayName + ' ' + state.awayScore + ' : ' + state.homeScore + ' ' + state.homeName;
+  $('wScoreHint').textContent = '目前進攻：' + (state.isTop ? state.awayName : state.homeName);
+  document.querySelectorAll('#wDiamond .base').forEach((el) => el.classList.toggle('on', !!state.bases[el.dataset.base]));
+  // 看板
+  $('bAwayName').textContent = state.awayName;
+  $('bHomeName').textContent = state.homeName;
+  $('bAwayScore').textContent = state.awayScore;
+  $('bHomeScore').textContent = state.homeScore;
+  $('bInning').textContent = state.inning + '局';
+  $('bHalf').textContent = state.isTop ? '▲ 上半局' : '▼ 下半局';
+  document.querySelectorAll('#bDiamond .base').forEach((el) => el.classList.toggle('on', !!state.bases[el.dataset.base]));
+  renderLamps('lampsB', state.balls, 3, 'on-b');
+  renderLamps('lampsS', state.strikes, 2, 'on-s');
+  renderLamps('lampsO', state.outs, 2, 'on-o');
+  renderTable();
+  const mode = USE_LOCAL_MOCK ? '測試模式（localStorage）' : '雲端同步（Firebase）';
+  $('wRoom').textContent = '場次：' + room + ' · ' + mode;
+  $('bRoom').textContent = '場次：' + room;
+  $('bMode').textContent = mode;
+}
+function renderLamps(id, count, max, cls) {
+  const box = $(id); if (!box) return;
+  if (box.childElementCount !== max) {
+    box.innerHTML = '';
+    for (let i = 0; i < max; i++) { const d = document.createElement('div'); d.className = 'lamp'; box.appendChild(d); }
+  }
+  [...box.children].forEach((el, i) => el.classList.toggle(cls, i < count));
+}
+function renderTable() {
+  const n = Math.max(9, state.inning, state.awayInnings.length, state.homeInnings.length);
+  let html = '<tr><th></th>';
+  for (let i = 1; i <= n; i++) html += '<th>' + i + '</th>';
+  html += '<th>R</th></tr>';
+  html += '<tr><td class="team-cell" data-side="away">' + escapeHtml(state.awayName) + '</td>';
+  for (let i = 0; i < n; i++) html += '<td>' + (state.awayInnings[i] || 0) + '</td>';
+  html += '<td class="total-cell">' + state.awayScore + '</td></tr>';
+  html += '<tr><td class="team-cell" data-side="home">' + escapeHtml(state.homeName) + '</td>';
+  for (let i = 0; i < n; i++) html += '<td>' + (state.homeInnings[i] || 0) + '</td>';
+  html += '<td class="total-cell">' + state.homeScore + '</td></tr>';
+  $('scoreTable').innerHTML = html;
+  document.querySelectorAll('#scoreTable .team-cell').forEach((el) => {
+    el.onclick = () => editTeam(el.dataset.side);
+  });
+}
+function escapeHtml(s) { return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])); }
+function editTeam(side) {
+  const cur = side === 'away' ? state.awayName : state.homeName;
+  const next = prompt(side === 'away' ? '客隊名稱' : '主隊名稱', cur);
+  if (next === null) return;
+  const name = next.trim() || cur;
+  mutate(() => { if (side === 'away') state.awayName = name; else state.homeName = name; });
+}
+
+/* ---------- 防休眠（看板） ---------- */
+let wakeLock = null;
+async function requestWakeLock() {
+  try {
+    if (!('wakeLock' in navigator)) { $('wakeBtn').textContent = '⚠️ 此瀏覽器不支援防休眠'; return false; }
+    wakeLock = await navigator.wakeLock.request('screen');
+    $('wakeBtn').textContent = '☀️ 防休眠已開啟';
+    $('wakeBtn').classList.add('on');
+    wakeLock.addEventListener('release', () => { $('wakeBtn').textContent = '🌙 開啟防休眠'; $('wakeBtn').classList.remove('on'); });
+    return true;
+  } catch (e) { console.warn('Wake Lock 失敗', e); return false; }
+}
+document.addEventListener('visibilitychange', () => {
+  if (role === 'board' && document.visibilityState === 'visible' && $('wakeBtn').classList.contains('on')) requestWakeLock();
+});
+
+/* ---------- 綁定事件 ---------- */
+function vibrate() { try { if (navigator.vibrate) navigator.vibrate(50); } catch (e) {} }
+function bindWatch() {
+  const act = (fn) => () => { vibrate(); fn(); };
+  $('btnStrike').onclick = act(doStrike);
+  $('btnBall').onclick = act(doBall);
+  $('btnOut').onclick = act(doOut);
+  $('btnScore').onclick = act(doScore);
+  $('btnUndo').onclick = act(doUndo);
+  $('btnChangeHalf').onclick = act(() => mutate(() => endHalf()));
+  document.querySelectorAll('#wDiamond .base').forEach((el) => {
+    el.onclick = () => { vibrate(); mutate(() => { state.bases[el.dataset.base] = !state.bases[el.dataset.base]; }); };
+  });
+  // 重設：第一次點變成「確定重設？」，3 秒內再點才執行
+  let armed = false, timer = null;
+  $('btnReset').onclick = () => {
+    vibrate();
+    if (!armed) {
+      armed = true; $('btnReset').textContent = '⚠️ 確定重設？'; $('btnReset').classList.add('armed');
+      timer = setTimeout(() => { armed = false; $('btnReset').textContent = '🗑️ 重設比賽'; $('btnReset').classList.remove('armed'); }, 3000);
+      return;
+    }
+    clearTimeout(timer); armed = false;
+    $('btnReset').textContent = '🗑️ 重設比賽'; $('btnReset').classList.remove('armed');
+    doReset();
+  };
+}
+function bindBoard() {
+  $('bAwayName').onclick = () => editTeam('away');
+  $('bHomeName').onclick = () => editTeam('home');
+  $('wakeBtn').onclick = async () => {
+    if ($('wakeBtn').classList.contains('on') && wakeLock) { try { await wakeLock.release(); } catch (e) {} return; }
+    await requestWakeLock();
+  };
+  // 看板開啟時先嘗試一次防休眠（需使用者手勢時，角落按鈕可再手動啟動）
+  requestWakeLock();
+}
+
+/* ---------- 路由 ---------- */
+function show(id) { ['home', 'watch', 'board'].forEach((k) => $(k).classList.toggle('hidden', k !== id)); }
+function go(r) {
+  const code = ($('roomInput').value || 'game1').trim() || 'game1';
+  const short = r === 'board' ? 'b' : 'w';
+  // 預設場次 game1 就省略 room，網址最短：只有 ?w 或 ?b
+  const roomPart = code === 'game1' ? '' : '&room=' + encodeURIComponent(code);
+  location.href = location.pathname + '?' + short + roomPart;
+}
+$('goBoard').onclick = () => go('board');
+$('goWatch').onclick = () => go('watch');
+$('roomInput').value = room;
+$('homeMode').textContent = USE_LOCAL_MOCK ? '目前為測試模式（localStorage 同步）。' : '目前為 Firebase 雲端同步模式。';
+
+if (role === 'watch') { show('watch'); bindWatch(); }
+else if (role === 'board') { show('board'); bindBoard(); }
+else { show('home'); }
+
+await initSync();
+renderAll();
+</script>
+</body>
+</html>
