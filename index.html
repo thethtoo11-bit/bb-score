@@ -126,7 +126,7 @@
   </div>
   <button class="home-btn board" id="goBoard">📺 開啟 iPad 計分板</button>
   <button class="home-btn watch" id="goWatch">⌚ 開啟手錶控制器</button>
-  <p class="home-hint">桌球棒球規則：場邊按規則判好結果，手錶直接按一壘安打 / 二壘安打 / 全壘打 / 出局 / 雙殺。測試模式已開啟（localStorage 同步）：在同一台電腦開兩個分頁，分別加上 ?w 與 ?b 即可測試。正式上線再填 Firebase 金鑰並把 USE_LOCAL_MOCK 改為 false。</p>
+  <p class="home-hint">桌球棒球規則：場邊按規則判好結果，手錶直接按一壘安打 / 二壘安打 / 全壘打 / 出局 / 雙殺。已接 Firebase 雲端同步：手錶和 iPad 用同一場次代碼（預設 game1）就會即時同步。</p>
   <p class="home-hint" id="homeMode"></p>
 </section>
 
@@ -203,15 +203,16 @@
    3. 把 USE_LOCAL_MOCK 改為 false，就切換為雲端跨裝置同步
    ============================================================ */
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
-  projectId: "YOUR_PROJECT",
-  storageBucket: "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyD1_WRvb5R9EJlauPv7zl7JJQCHhrkHQDA",
+  authDomain: "bb-score-ebcd0.firebaseapp.com",
+  databaseURL: "https://bb-score-ebcd0-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "bb-score-ebcd0",
+  storageBucket: "bb-score-ebcd0.firebasestorage.app",
+  messagingSenderId: "922349329191",
+  appId: "1:922349329191:web:1dcbc8f5fe743e8bd3e702",
+  measurementId: "G-GB1MTHYWRW"
 };
-const USE_LOCAL_MOCK = true; // true = localStorage 同瀏覽器跨分頁測試；false = Firebase 雲端跨裝置同步
+const USE_LOCAL_MOCK = false; // true = localStorage 同瀏覽器跨分頁測試；false = Firebase 雲端跨裝置同步
 
 const params = new URLSearchParams(location.search);
 // 短參數路由：?w / ?b、?role=w / ?role=b、?role=watch / ?role=board 都支援
