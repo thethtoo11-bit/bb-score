@@ -47,7 +47,15 @@
   .diamond .b3{top:48px;left:0}
   .diamond .home{position:absolute;bottom:0;left:48px;width:36px;height:36px;transform:rotate(45deg);border-radius:7px;background:#334155;border:3px solid #64748b}
   .diamond .base-label{position:absolute;font-size:11px;color:#9aa7b8;font-weight:700}
-  .watch-actions{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:14px}
+  .btn-single{background:#4ade80}
+  .btn-double{background:#60a5fa;color:#fff}
+  .btn-hr{background:#facc15}
+  .btn-dp{background:#c084fc;color:#fff}
+  .last-action{text-align:center;font-size:14px;color:#fbbf24;font-weight:700;min-height:20px;margin:8px 0 2px}
+  .btn-rollback{display:block;width:100%;padding:18px 10px;border-radius:16px;font-size:22px;font-weight:900;margin:8px 0 4px;background:#f59e0b;color:#111}
+  .btn-rollback:disabled{opacity:.35}
+  .btn-rollback:active{transform:scale(.97)}
+  .watch-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
   .watch-actions button{padding:13px 4px;border-radius:12px;font-size:16px;font-weight:800;background:#1e293b;color:#fff;border:1px solid #334155}
   .watch-actions button.danger.armed{background:#dc2626;border-color:#ef4444;animation:pulse 1s infinite}
   @keyframes pulse{50%{opacity:.6}}
@@ -117,7 +125,7 @@
   </div>
   <button class="home-btn board" id="goBoard">📺 開啟 iPad 計分板</button>
   <button class="home-btn watch" id="goWatch">⌚ 開啟手錶控制器</button>
-  <p class="home-hint">測試模式已開啟（localStorage 同步）：在同一台電腦開兩個分頁，分別加上 ?w 與 ?b 即可測試（舊的 ?role=watch / ?role=board 也能用）。正式上線再填 Firebase 金鑰並把 USE_LOCAL_MOCK 改為 false。</p>
+  <p class="home-hint">桌球棒球規則：場邊按規則判好結果，手錶直接按一壘安打 / 二壘安打 / 全壘打 / 出局 / 雙殺。測試模式已開啟（localStorage 同步）：在同一台電腦開兩個分頁，分別加上 ?w 與 ?b 即可測試。正式上線再填 Firebase 金鑰並把 USE_LOCAL_MOCK 改為 false。</p>
   <p class="home-hint" id="homeMode"></p>
 </section>
 
@@ -125,14 +133,17 @@
 <section id="watch" class="hidden">
   <div class="watch-status">
     <div class="line1" id="wInning">1局上</div>
-    <div class="line2" id="wCount">0B 0S 0O</div>
+    <div class="line2" id="wCount">出局 0 個</div>
     <div class="line3" id="wScore">客 0 : 0 主</div>
   </div>
   <div class="watch-room" id="wRoom">場次：game1 · 測試模式</div>
-  <button class="big-btn btn-strike" id="btnStrike">好球 +1<small>滿 3 好球 → 出局 +1</small></button>
-  <button class="big-btn btn-ball" id="btnBall">壞球 +1<small>滿 4 壞球 → 保送推進</small></button>
-  <button class="big-btn btn-out" id="btnOut">出局 +1<small>滿 3 出局 → 換半局</small></button>
-  <button class="big-btn btn-score" id="btnScore">得分 +1<small id="wScoreHint">目前進攻：客隊</small></button>
+  <div class="last-action" id="wLastAction">還沒有操作</div>
+  <button class="big-btn btn-single" id="btnSingle">一壘安打<small>打者上一壘，跑者推進 1 壘</small></button>
+  <button class="big-btn btn-double" id="btnDouble">二壘安打<small>打者上二壘，跑者推進 2 壘</small></button>
+  <button class="big-btn btn-hr" id="btnHR">全壘打<small>全員得分，清空壘包</small></button>
+  <button class="big-btn btn-out" id="btnOut">出局<small>出局 +1，跑者保持原位</small></button>
+  <button class="big-btn btn-dp" id="btnDP">雙殺<small>出局 +1，最低壘跑者出局</small></button>
+  <button class="btn-rollback" id="btnRollback" disabled>↩️ 回滾上一步</button>
   <div class="watch-label">壘包（點一下切換有人 / 無人）</div>
   <div class="diamond" id="wDiamond">
     <div class="base b2" data-base="second" role="button" aria-label="二壘"></div>
@@ -141,7 +152,6 @@
     <div class="home"></div>
   </div>
   <div class="watch-actions">
-    <button id="btnUndo">↩️ 復原</button>
     <button id="btnChangeHalf">🔄 手動換局</button>
     <button id="btnReset" class="danger">🗑️ 重設比賽</button>
   </div>
@@ -171,8 +181,6 @@
   <table class="score-table" id="scoreTable"></table>
   <div class="board-bottom">
     <div class="bso">
-      <div class="bso-group"><div class="label">壞球 B</div><div class="lamps" id="lampsB"></div></div>
-      <div class="bso-group"><div class="label">好球 S</div><div class="lamps" id="lampsS"></div></div>
       <div class="bso-group"><div class="label">出局 O</div><div class="lamps" id="lampsO"></div></div>
     </div>
     <div class="board-diamond" id="bDiamond">
@@ -182,6 +190,7 @@
       <div class="home"></div>
     </div>
   </div>
+  <div class="board-note" id="bLastAction">還沒有操作</div>
   <div class="board-note">由手錶控制器即時同步 · <a href="./" style="color:#60a5fa">回首頁</a></div>
 </section>
 
@@ -221,8 +230,9 @@ function defaultState() {
     inning: 1, isTop: true,
     awayScore: 0, homeScore: 0,
     awayInnings: Array(9).fill(0), homeInnings: Array(9).fill(0),
-    balls: 0, strikes: 0, outs: 0,
+    balls: 0, strikes: 0, outs: 0, // 桌球棒球規則無好壞球，balls/strikes 保留為 0 僅供舊資料相容
     bases: { first: false, second: false, third: false },
+    lastAction: '',
     history: []
   };
 }
@@ -306,38 +316,51 @@ function endHalf() {
   if (state.isTop) { state.isTop = false; }
   else { state.isTop = true; state.inning++; }
 }
-function mutate(fn) { pushHistory(); fn(); saveState(); renderAll(); }
-function doStrike() {
+function mutate(fn, label) { pushHistory(); fn(); if (label) state.lastAction = label; saveState(); renderAll(); }
+/* 桌球棒球結果：打者依規則判好結果後，手錶直接按一顆，程式只算壘包/分數/出局 */
+function doSingle() {
   mutate(() => {
-    state.strikes++;
-    if (state.strikes >= 3) {
-      state.strikes = 0; state.balls = 0; state.outs++;
-      if (state.outs >= 3) endHalf();
-    }
-  });
+    const b = state.bases, side = battingSide();
+    if (b.third) addRun(side);
+    state.bases = { first: true, second: !!b.first, third: !!b.second };
+  }, '一壘安打');
 }
-function doBall() {
+function doDouble() {
   mutate(() => {
-    state.balls++;
-    if (state.balls >= 4) {
-      state.balls = 0; state.strikes = 0;
-      const b = state.bases;
-      if (b.first && b.second && b.third) {
-        addRun(battingSide()); // 滿壘保送，進攻方 +1 分，壘包維持滿壘
-      } else if (b.first && b.second) {
-        b.third = true; b.second = true; b.first = true;
-      } else if (b.first) {
-        b.second = true; b.first = true;
-      } else {
-        b.first = true;
-      }
-    }
-  });
+    const b = state.bases, side = battingSide();
+    if (b.third) addRun(side);
+    if (b.second) addRun(side);
+    state.bases = { first: false, second: true, third: !!b.first };
+  }, '二壘安打');
+}
+function doHR() {
+  mutate(() => {
+    const b = state.bases, side = battingSide();
+    if (b.first) addRun(side);
+    if (b.second) addRun(side);
+    if (b.third) addRun(side);
+    addRun(side); // 打者本人
+    state.bases = { first: false, second: false, third: false };
+  }, '全壘打');
+}
+function addOut() {
+  state.outs++;
+  if (state.outs >= 3) endHalf();
 }
 function doOut() {
-  mutate(() => { state.outs++; if (state.outs >= 3) endHalf(); });
+  mutate(() => addOut(), '出局');
 }
-function doScore() { mutate(() => addRun(battingSide())); }
+function doDoublePlay() {
+  // 依規則定義：出局數 +1，且壘上最低壘位的跑者出局，其他跑者不推進。
+  // 若你希望雙殺一次加 2 個出局，請告訴我，我再改成 +2。
+  mutate(() => {
+    const b = state.bases;
+    if (b.first) b.first = false;
+    else if (b.second) b.second = false;
+    else if (b.third) b.third = false;
+    addOut();
+  }, '雙殺');
+}
 function doUndo() {
   const prev = state.history.pop();
   if (!prev) return;
@@ -349,6 +372,7 @@ function doReset() {
   const names = { awayName: state.awayName, homeName: state.homeName };
   state = defaultState();
   state.awayName = names.awayName; state.homeName = names.homeName;
+  state.lastAction = '重設比賽';
   saveState(); renderAll();
 }
 
@@ -356,9 +380,18 @@ function doReset() {
 function renderAll() {
   // 手錶
   $('wInning').textContent = state.inning + '局' + (state.isTop ? '上' : '下');
-  $('wCount').textContent = state.balls + 'B ' + state.strikes + 'S ' + state.outs + 'O';
+  $('wCount').textContent = '出局 ' + state.outs + ' 個';
   $('wScore').textContent = state.awayName + ' ' + state.awayScore + ' : ' + state.homeScore + ' ' + state.homeName;
-  $('wScoreHint').textContent = '目前進攻：' + (state.isTop ? state.awayName : state.homeName);
+  const lastText = state.history.length && state.lastAction
+    ? '上一步：' + state.lastAction + '（可回滾 ' + state.history.length + ' 步）'
+    : '還沒有操作';
+  $('wLastAction').textContent = lastText;
+  $('bLastAction').textContent = lastText;
+  const rb = $('btnRollback');
+  rb.disabled = state.history.length === 0;
+  rb.textContent = state.history.length && state.lastAction
+    ? '↩️ 回滾上一步：' + state.lastAction
+    : '↩️ 回滾上一步';
   document.querySelectorAll('#wDiamond .base').forEach((el) => el.classList.toggle('on', !!state.bases[el.dataset.base]));
   // 看板
   $('bAwayName').textContent = state.awayName;
@@ -368,8 +401,6 @@ function renderAll() {
   $('bInning').textContent = state.inning + '局';
   $('bHalf').textContent = state.isTop ? '▲ 上半局' : '▼ 下半局';
   document.querySelectorAll('#bDiamond .base').forEach((el) => el.classList.toggle('on', !!state.bases[el.dataset.base]));
-  renderLamps('lampsB', state.balls, 3, 'on-b');
-  renderLamps('lampsS', state.strikes, 2, 'on-s');
   renderLamps('lampsO', state.outs, 2, 'on-o');
   renderTable();
   const mode = USE_LOCAL_MOCK ? '測試模式（localStorage）' : '雲端同步（Firebase）';
@@ -407,7 +438,7 @@ function editTeam(side) {
   const next = prompt(side === 'away' ? '客隊名稱' : '主隊名稱', cur);
   if (next === null) return;
   const name = next.trim() || cur;
-  mutate(() => { if (side === 'away') state.awayName = name; else state.homeName = name; });
+  mutate(() => { if (side === 'away') state.awayName = name; else state.homeName = name; }, '改隊名：' + name);
 }
 
 /* ---------- 防休眠（看板） ---------- */
@@ -430,14 +461,16 @@ document.addEventListener('visibilitychange', () => {
 function vibrate() { try { if (navigator.vibrate) navigator.vibrate(50); } catch (e) {} }
 function bindWatch() {
   const act = (fn) => () => { vibrate(); fn(); };
-  $('btnStrike').onclick = act(doStrike);
-  $('btnBall').onclick = act(doBall);
+  $('btnSingle').onclick = act(doSingle);
+  $('btnDouble').onclick = act(doDouble);
+  $('btnHR').onclick = act(doHR);
   $('btnOut').onclick = act(doOut);
-  $('btnScore').onclick = act(doScore);
-  $('btnUndo').onclick = act(doUndo);
-  $('btnChangeHalf').onclick = act(() => mutate(() => endHalf()));
+  $('btnDP').onclick = act(doDoublePlay);
+  // 回滾：大按鈕、按錯馬上點一下就回到上一步，可連點回滾 15 步
+  $('btnRollback').onclick = act(doUndo);
+  $('btnChangeHalf').onclick = act(() => mutate(() => endHalf(), '手動換局'));
   document.querySelectorAll('#wDiamond .base').forEach((el) => {
-    el.onclick = () => { vibrate(); mutate(() => { state.bases[el.dataset.base] = !state.bases[el.dataset.base]; }); };
+    el.onclick = () => { vibrate(); mutate(() => { state.bases[el.dataset.base] = !state.bases[el.dataset.base]; }, '手動切換壘包'); };
   });
   // 重設：第一次點變成「確定重設？」，3 秒內再點才執行
   let armed = false, timer = null;
