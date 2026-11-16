@@ -105,6 +105,10 @@
   .board-diamond .home{position:absolute;bottom:0;left:69px;width:52px;height:52px;transform:rotate(45deg);border-radius:10px;background:#334155;border:4px solid #64748b}
   .board-note{text-align:center;color:#64748b;font-size:13px;margin-top:10px}
   .fx-test{background:none;border:none;color:#60a5fa;font-size:13px;text-decoration:underline;padding:0}
+  .games-box{margin-top:14px;background:#0b1220;border:1px solid #263244;border-radius:12px;padding:12px 14px}
+  .games-title{font-size:16px;font-weight:800;margin-bottom:4px}
+  .game-item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-top:1px solid #1e293b;font-size:15px}
+  .game-dl{padding:6px 10px;border-radius:8px;background:#1e293b;color:#bfdbfe;border:1px solid #334155;font-size:13px;font-weight:700}
   /* ---------- 全壘打特效（只在看板端） ---------- */
   #fwCanvas{position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:9998}
   #hrBanner{position:fixed;top:34%;left:0;right:0;text-align:center;pointer-events:none;z-index:9999;font-size:clamp(48px,9vw,110px);font-weight:900;color:#facc15;text-shadow:0 0 30px rgba(250,204,21,.8),0 4px 0 #b45309;opacity:0}
@@ -205,6 +209,10 @@
   </div>
   <div class="board-note" id="bLastAction">還沒有操作</div>
   <div class="board-note">局數無上限，延長賽自動加欄 · 由手錶控制器即時同步 · <button class="fx-test" id="testFx">🎆 測試全壘打特效</button> · <a href="./" style="color:#60a5fa">回首頁</a></div>
+  <div class="games-box">
+    <div class="games-title">📜 歷史比賽 <span id="gamesCount" class="muted"></span></div>
+    <div id="gamesList" class="muted">還沒有存檔的比賽</div>
+  </div>
 </section>
 
 <!-- 全壘打特效：煙花畫布 + 大字橫幅（只在看板端使用） -->
@@ -260,6 +268,27 @@ let firebaseDb = null, firebaseRef = null, firebaseLib = null;
 let bc = null;
 try { bc = new BroadcastChannel('baseball-scoreboard:' + room); } catch (e) {}
 
+/* ---------- 歷史比賽（雲端 games 節點，即時同步） ---------- */
+let gamesList = [];
+function renderGames() {
+  const box = $('gamesList'); if (!box) return;
+  $('gamesCount').textContent = gamesList.length ? '（' + gamesList.length + ' 場）' : '';
+  if (!gamesList.length) { box.innerHTML = '還沒有存檔的比賽'; return; }
+  box.innerHTML = '';
+  gamesList.forEach((g, i) => {
+    const s = g.state || {};
+    const d = new Date(g.endedAt || 0), pad = (n) => String(n).padStart(2, '0');
+    const when = isNaN(d) ? '' : (d.getMonth() + 1) + '/' + d.getDate() + ' ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+    const row = document.createElement('div'); row.className = 'game-item';
+    const info = document.createElement('span');
+    info.textContent = when + '　' + (s.awayName || '客隊') + ' ' + (s.awayScore || 0) + ' : ' + (s.homeScore || 0) + ' ' + (s.homeName || '主隊');
+    const btn = document.createElement('button'); btn.className = 'game-dl'; btn.textContent = '⬇️ JSON';
+    btn.onclick = () => downloadJson('bb-score-' + room + '-' + (g.key || i) + '.json', g);
+    row.appendChild(info); row.appendChild(btn);
+    box.appendChild(row);
+  });
+}
+
 /* ---------- 同步層 ---------- */
 function storageKey() { return 'baseball-scoreboard:' + room; }
 
@@ -269,6 +298,9 @@ async function initSync() {
       const raw = localStorage.getItem(storageKey());
       if (raw) { const parsed = JSON.parse(raw); if (parsed && typeof parsed.inning === 'number') state = parsed; }
     } catch (e) {}
+    // 測試模式：歷史比賽從本機 localStorage 讀
+    try { gamesList = JSON.parse(localStorage.getItem('baseball-scoreboard:games:' + room) || '[]'); } catch (e) {}
+    renderGames();
     window.addEventListener('storage', (e) => {
       if (e.key === storageKey() && e.newValue) {
         try { const parsed = JSON.parse(e.newValue); if (JSON.stringify(parsed) !== JSON.stringify(state)) { state = parsed; renderAll(); } } catch (err) {}
@@ -291,6 +323,14 @@ async function initSync() {
     dbMod.onValue(firebaseRef, (snap) => {
       const val = snap.val();
       if (val && JSON.stringify(val) !== lastSavedJson) { state = val; if (!Array.isArray(state.history)) state.history = []; renderAll(); }
+    });
+    // 歷史比賽：監聽 rooms/<場次>/games，任何裝置結束比賽後，這裡即時出現
+    const gamesRef = dbMod.ref(firebaseDb, 'rooms/' + room + '/games');
+    dbMod.onValue(gamesRef, (snap) => {
+      const val = snap.val() || {};
+      gamesList = Object.entries(val).map(([key, v]) => ({ key, ...v }))
+        .sort((a, b) => (a.endedAt < b.endedAt ? 1 : -1));
+      renderGames();
     });
   } catch (e) {
     alert('Firebase 連線失敗，請檢查 firebaseConfig 與網路，暫時改回本機測試模式。');
@@ -427,6 +467,13 @@ function endGame() {
   } catch (e) { console.warn('本機歷史寫入失敗', e); }
   // 2) JSON 檔下載：檔名帶場次與時間，iPad 會存到「檔案」App
   const ok = downloadJson('bb-score-' + room + '-' + stamp + '.json', archive);
+  // 3) Firebase 雲端：寫入 rooms/<場次>/games/<時間戳>，各裝置的歷史清單即時出現
+  //    （需 Database Rules 開放 games 節點；若規則還沒開，寫入會失敗，只影響雲端那份）
+  if (firebaseLib && firebaseDb && !USE_LOCAL_MOCK) {
+    firebaseLib.set(firebaseLib.ref(firebaseDb, 'rooms/' + room + '/games/' + Date.now()), archive)
+      .then(() => { state.lastAction = '🏁 比賽結束，已存檔（雲端＋JSON）'; saveState(); renderAll(); })
+      .catch((e) => { console.error('雲端存檔失敗', e); state.lastAction = '🏁 比賽結束，已存檔（JSON 已下載，雲端失敗）'; saveState(); renderAll(); });
+  }
   mutate(() => {}, '🏁 比賽結束，已存檔' + (ok ? '（JSON 已下載）' : '（下載失敗，請再按一次）'));
 }
 
