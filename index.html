@@ -67,6 +67,9 @@
   .board-title b{color:#fff;font-size:18px}
   .wake-btn{padding:10px 14px;border-radius:999px;background:#1e293b;color:#e2e8f0;border:1px solid #475569;font-size:14px;font-weight:700}
   .wake-btn.on{background:#166534;border-color:#22c55e;color:#bbf7d0}
+  .board-top-btns{display:flex;gap:8px}
+  .endgame-btn{padding:10px 14px;border-radius:999px;background:#7f1d1d;color:#fecaca;border:1px solid #b91c1c;font-size:14px;font-weight:700}
+  .endgame-btn.armed{background:#dc2626;border-color:#ef4444;color:#fff;animation:pulse 1s infinite}
   .score-row{display:flex;align-items:center;justify-content:center;gap:28px;margin:8px 0 4px}
   .team{flex:1;text-align:center;min-width:0}
   .team .name{font-size:clamp(28px,4.5vw,54px);font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;border-bottom:2px dashed #475569;padding-bottom:4px}
@@ -169,7 +172,10 @@
 <section id="board" class="hidden">
   <div class="board-top">
     <div class="board-title"><b>⚾ 私人棒球計分板</b><br><span id="bRoom">場次：game1</span> · <span id="bMode">測試模式</span> · 點隊名可改名</div>
-    <button class="wake-btn" id="wakeBtn">🌙 開啟防休眠</button>
+    <div class="board-top-btns">
+      <button class="endgame-btn" id="endGameBtn">🏁 結束比賽</button>
+      <button class="wake-btn" id="wakeBtn">🌙 開啟防休眠</button>
+    </div>
   </div>
   <div class="score-row">
     <div class="team away">
@@ -392,6 +398,38 @@ function doReset() {
   saveState(); renderAll();
 }
 
+/* ---------- 結束比賽：把整場 raw data 存下來 ---------- */
+function buildGameArchive() {
+  // raw data 就是整份 state：隊名、比分、各局得分、出局、壘包、上一步、15 步回滾歷史全在裡面
+  return { room, endedAt: new Date().toISOString(), state: clone(state) };
+}
+function downloadJson(filename, data) {
+  try {
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click();
+    setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1000);
+    return true;
+  } catch (e) { console.warn('JSON 下載失敗', e); return false; }
+}
+function endGame() {
+  const archive = buildGameArchive();
+  const d = new Date(), pad = (n) => String(n).padStart(2, '0');
+  const stamp = d.getFullYear() + pad(d.getMonth() + 1) + pad(d.getDate()) + '-' + pad(d.getHours()) + pad(d.getMinutes());
+  // 1) 本機歷史：存在這台 iPad 的 localStorage，最近 20 場
+  try {
+    const key = 'baseball-scoreboard:games:' + room;
+    const list = JSON.parse(localStorage.getItem(key) || '[]');
+    list.push(archive);
+    localStorage.setItem(key, JSON.stringify(list.slice(-20)));
+  } catch (e) { console.warn('本機歷史寫入失敗', e); }
+  // 2) JSON 檔下載：檔名帶場次與時間，iPad 會存到「檔案」App
+  const ok = downloadJson('bb-score-' + room + '-' + stamp + '.json', archive);
+  mutate(() => {}, '🏁 比賽結束，已存檔' + (ok ? '（JSON 已下載）' : '（下載失敗，請再按一次）'));
+}
+
 /* ---------- 全壘打特效（只在看板端，純程式碼：Canvas 煙花 + WebAudio 合成歡呼，不用圖片/音檔） ---------- */
 let audioCtx = null;
 function unlockAudio() {
@@ -598,6 +636,18 @@ function bindBoard() {
   $('bHomeName').onclick = () => editTeam('home');
   $('testFx').onclick = () => { unlockAudio(); celebrateHR(); };
   document.addEventListener('pointerdown', unlockAudio);
+  // 結束比賽：第一次點變成「確定結束並存檔？」，3 秒內再點才執行，避免誤觸
+  let endArmed = false, endTimer = null;
+  $('endGameBtn').onclick = () => {
+    if (!endArmed) {
+      endArmed = true; $('endGameBtn').textContent = '⚠️ 確定結束並存檔？'; $('endGameBtn').classList.add('armed');
+      endTimer = setTimeout(() => { endArmed = false; $('endGameBtn').textContent = '🏁 結束比賽'; $('endGameBtn').classList.remove('armed'); }, 3000);
+      return;
+    }
+    clearTimeout(endTimer); endArmed = false;
+    $('endGameBtn').textContent = '🏁 結束比賽'; $('endGameBtn').classList.remove('armed');
+    endGame();
+  };
   $('wakeBtn').onclick = async () => {
     if ($('wakeBtn').classList.contains('on') && wakeLock) { try { await wakeLock.release(); } catch (e) {} return; }
     await requestWakeLock();
