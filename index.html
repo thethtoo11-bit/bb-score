@@ -70,6 +70,8 @@
   .board-top-btns{display:flex;gap:8px}
   .endgame-btn{padding:10px 14px;border-radius:999px;background:#7f1d1d;color:#fecaca;border:1px solid #b91c1c;font-size:14px;font-weight:700}
   .endgame-btn.armed{background:#dc2626;border-color:#ef4444;color:#fff;animation:pulse 1s infinite}
+  .reset-btn{padding:10px 14px;border-radius:999px;background:#78350f;color:#fde68a;border:1px solid #b45309;font-size:14px;font-weight:700}
+  .reset-btn.armed{background:#ea580c;border-color:#f97316;color:#fff;animation:pulse 1s infinite}
   .score-row{display:flex;align-items:center;justify-content:center;gap:28px;margin:8px 0 4px}
   .team{flex:1;text-align:center;min-width:0}
   .team .name{font-size:clamp(28px,4.5vw,54px);font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;border-bottom:2px dashed #475569;padding-bottom:4px}
@@ -178,6 +180,7 @@
     <div class="board-title"><b>⚾ Nexse Rally Base</b><br><span id="bRoom">場次：game1</span> · <span id="bMode">測試模式</span> · 點隊名可改名</div>
     <div class="board-top-btns">
       <button class="endgame-btn" id="endGameBtn">🏁 結束比賽</button>
+      <button class="reset-btn" id="boardResetBtn">🗑️ 重設比賽</button>
       <button class="wake-btn" id="wakeBtn">🌙 開啟防休眠</button>
     </div>
   </div>
@@ -694,6 +697,18 @@ function bindBoard() {
     clearTimeout(endTimer); endArmed = false;
     $('endGameBtn').textContent = '🏁 結束比賽'; $('endGameBtn').classList.remove('armed');
     endGame();
+  };
+  // 看板重設：第一次點變成「確定重設？」，3 秒內再點才執行（跟手錶一樣，隊名保留、已存檔的比賽不受影響）
+  let resetArmed = false, resetTimer = null;
+  $('boardResetBtn').onclick = () => {
+    if (!resetArmed) {
+      resetArmed = true; $('boardResetBtn').textContent = '⚠️ 確定重設？'; $('boardResetBtn').classList.add('armed');
+      resetTimer = setTimeout(() => { resetArmed = false; $('boardResetBtn').textContent = '🗑️ 重設比賽'; $('boardResetBtn').classList.remove('armed'); }, 3000);
+      return;
+    }
+    clearTimeout(resetTimer); resetArmed = false;
+    $('boardResetBtn').textContent = '🗑️ 重設比賽'; $('boardResetBtn').classList.remove('armed');
+    doReset();
   };
   $('wakeBtn').onclick = async () => {
     if ($('wakeBtn').classList.contains('on') && wakeLock) { try { await wakeLock.release(); } catch (e) {} return; }
