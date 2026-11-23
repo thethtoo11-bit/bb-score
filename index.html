@@ -732,7 +732,7 @@ $('goWatch').onclick = () => go('watch');
 $('roomInput').value = room;
 $('homeMode').textContent = USE_LOCAL_MOCK ? '目前為測試模式（localStorage 同步）。' : '目前為 Firebase 雲端同步模式。';
 
-if (role === 'watch') { show('watch'); bindWatch(); }
+if (role === 'watch') { document.title = '棒球計分板'; show('watch'); bindWatch(); }
 else if (role === 'board') { show('board'); bindBoard(); }
 else { show('home'); }
 
