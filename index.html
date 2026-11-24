@@ -6,75 +6,75 @@
 <title>Nexse Rally Base</title>
 <style>
   *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-  html,body{margin:0;padding:0;background:#070b12;color:#f2f5f9;font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Microsoft JhengHei",sans-serif}
+  html,body{margin:0;padding:0;color:#f2f5f9;font-family:-apple-system,BlinkMacSystemFont,"PingFang TC","Microsoft JhengHei",sans-serif;background:#05070c;background-image:radial-gradient(640px 420px at 10% -5%,rgba(45,212,191,.17),transparent 62%),radial-gradient(720px 520px at 92% 0%,rgba(59,130,246,.19),transparent 62%),radial-gradient(820px 620px at 5% 102%,rgba(168,85,247,.15),transparent 62%),radial-gradient(620px 480px at 96% 96%,rgba(245,158,11,.12),transparent 62%);background-attachment:fixed}
   body{touch-action:manipulation}
   button{font-family:inherit;touch-action:manipulation;cursor:pointer;border:none}
   .hidden{display:none!important}
   .muted{color:#9aa7b8;font-size:13px}
   /* ---------- 首頁 ---------- */
   #home{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;text-align:center}
-  #home h1{font-size:34px;margin:6px 0 4px}
+  #home h1{font-size:34px;margin:6px 0 4px;background:linear-gradient(120deg,#fff 20%,#93c5fd 55%,#c4b5fd 90%);-webkit-background-clip:text;background-clip:text;color:transparent}
   #home p{color:#9aa7b8;margin:4px 0 22px}
-  .room-box{width:min(420px,100%);background:#111827;border:1px solid #263244;border-radius:16px;padding:18px;margin-bottom:18px;text-align:left}
+  .room-box{width:min(420px,100%);background:rgba(255,255,255,.06);-webkit-backdrop-filter:blur(18px) saturate(160%);backdrop-filter:blur(18px) saturate(160%);border:1px solid rgba(255,255,255,.14);border-radius:20px;padding:18px;margin-bottom:18px;text-align:left;box-shadow:0 8px 32px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.12)}
   .room-box label{display:block;font-size:14px;color:#9aa7b8;margin-bottom:8px}
-  .room-box input{width:100%;font-size:22px;padding:12px 14px;border-radius:10px;border:1px solid #334155;background:#0b1220;color:#fff;outline:none}
+  .room-box input{width:100%;font-size:22px;padding:12px 14px;border-radius:12px;border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.06);color:#fff;outline:none}
   .home-btn{display:block;width:min(420px,100%);padding:20px;border-radius:16px;font-size:22px;font-weight:800;margin:10px 0;color:#fff}
-  .home-btn.board{background:#2563eb}
-  .home-btn.watch{background:#059669}
+  .home-btn.board{background:rgba(37,99,235,.5);border:1px solid rgba(147,197,253,.45);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);box-shadow:0 8px 28px rgba(37,99,235,.3),inset 0 1px 0 rgba(255,255,255,.25)}
+  .home-btn.watch{background:rgba(5,150,105,.5);border:1px solid rgba(110,231,183,.45);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);box-shadow:0 8px 28px rgba(5,150,105,.3),inset 0 1px 0 rgba(255,255,255,.25)}
   .home-btn:active{transform:scale(.98);opacity:.9}
   .home-hint{font-size:13px;color:#7d8aa0;max-width:420px;line-height:1.6}
   /* ---------- 手錶 ---------- */
-  #watch{max-width:400px;margin:0 auto;min-height:100vh;padding:10px 12px 16px;background:#070b12}
-  .watch-status{background:#111827;border:1px solid #263244;border-radius:14px;padding:10px 12px;text-align:center;margin-bottom:10px}
+  #watch{max-width:400px;margin:0 auto;min-height:100vh;padding:10px 12px 16px;background:transparent}
+  .watch-status{background:rgba(255,255,255,.06);-webkit-backdrop-filter:blur(18px) saturate(160%);backdrop-filter:blur(18px) saturate(160%);border:1px solid rgba(255,255,255,.14);border-radius:16px;padding:10px 12px;text-align:center;margin-bottom:10px;box-shadow:0 8px 28px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.12)}
   .watch-status .line1{font-size:19px;font-weight:800;letter-spacing:.5px}
   .watch-status .line2{font-size:15px;color:#fbbf24;margin-top:4px;font-weight:700}
   .watch-status .line3{font-size:17px;margin-top:4px;font-weight:800}
   .watch-room{text-align:center;font-size:12px;color:#7d8aa0;margin-bottom:10px}
-  .big-btn{display:block;width:100%;padding:18px 10px;border-radius:16px;font-size:24px;font-weight:900;margin:8px 0;color:#111}
+  .big-btn{display:block;width:100%;padding:18px 10px;border-radius:18px;font-size:24px;font-weight:900;margin:8px 0;color:#fff;border:1px solid rgba(255,255,255,.22);-webkit-backdrop-filter:blur(14px) saturate(150%);backdrop-filter:blur(14px) saturate(150%);box-shadow:0 8px 24px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.28)}
   .big-btn small{display:block;font-size:13px;font-weight:600;opacity:.75;margin-top:2px}
   .big-btn:active{transform:scale(.97);filter:brightness(1.15)}
-  .btn-strike{background:#facc15}
-  .btn-ball{background:#4ade80}
-  .btn-out{background:#f87171}
-  .btn-score{background:#60a5fa;color:#fff}
+  .btn-strike{background:rgba(250,204,21,.55);color:#111}
+  .btn-ball{background:rgba(74,222,128,.5)}
+  .btn-out{background:rgba(248,113,113,.5)}
+  .btn-score{background:rgba(96,165,250,.5);color:#fff}
   .watch-label{text-align:center;font-size:13px;color:#9aa7b8;margin:14px 0 6px;font-weight:700}
   /* 菱形壘包 */
   .diamond{position:relative;width:132px;height:132px;margin:6px auto}
-  .diamond .base{position:absolute;width:36px;height:36px;transform:rotate(45deg);border-radius:7px;background:#1f2937;border:3px solid #475569}
+  .diamond .base{position:absolute;width:36px;height:36px;transform:rotate(45deg);border-radius:7px;background:rgba(255,255,255,.07);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:3px solid rgba(255,255,255,.28)}
   .diamond .base.on{background:#facc15;border-color:#fde047;box-shadow:0 0 14px #facc15}
   .diamond .b2{top:0;left:48px}
   .diamond .b1{top:48px;right:0}
   .diamond .b3{top:48px;left:0}
-  .diamond .home{position:absolute;bottom:0;left:48px;width:36px;height:36px;transform:rotate(45deg);border-radius:7px;background:#334155;border:3px solid #64748b}
+  .diamond .home{position:absolute;bottom:0;left:48px;width:36px;height:36px;transform:rotate(45deg);border-radius:7px;background:rgba(255,255,255,.1);border:3px solid rgba(255,255,255,.35)}
   .diamond .base-label{position:absolute;font-size:11px;color:#9aa7b8;font-weight:700}
-  .btn-single{background:#4ade80}
-  .btn-double{background:#60a5fa;color:#fff}
-  .btn-hr{background:#facc15}
-  .btn-dp{background:#c084fc;color:#fff}
+  .btn-single{background:rgba(34,197,94,.55)}
+  .btn-double{background:rgba(59,130,246,.55)}
+  .btn-hr{background:rgba(250,204,21,.72);color:#111}
+  .btn-dp{background:rgba(192,132,252,.5)}
   .last-action{text-align:center;font-size:14px;color:#fbbf24;font-weight:700;min-height:20px;margin:8px 0 2px}
-  .btn-rollback{display:block;width:100%;padding:18px 10px;border-radius:16px;font-size:22px;font-weight:900;margin:8px 0 4px;background:#f59e0b;color:#111}
+  .btn-rollback{display:block;width:100%;padding:18px 10px;border-radius:18px;font-size:22px;font-weight:900;margin:8px 0 4px;background:rgba(245,158,11,.6);color:#fff;border:1px solid rgba(253,230,138,.5);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);box-shadow:0 8px 24px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.28)}
   .btn-rollback:disabled{opacity:.35}
   .btn-rollback:active{transform:scale(.97)}
   .watch-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
-  .watch-actions button{padding:13px 4px;border-radius:12px;font-size:16px;font-weight:800;background:#1e293b;color:#fff;border:1px solid #334155}
+  .watch-actions button{padding:13px 4px;border-radius:14px;font-size:16px;font-weight:800;background:rgba(255,255,255,.07);color:#fff;border:1px solid rgba(255,255,255,.16);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px)}
   .watch-actions button.danger.armed{background:#dc2626;border-color:#ef4444;animation:pulse 1s infinite}
   @keyframes pulse{50%{opacity:.6}}
   .watch-foot{text-align:center;font-size:12px;color:#64748b;margin-top:14px;line-height:1.6}
   /* ---------- 看板 ---------- */
-  #board{min-height:100vh;padding:14px 22px 18px;background:radial-gradient(1200px 600px at 50% -10%,#12233d 0%,#070b12 60%)}
+  #board{min-height:100vh;padding:14px 22px 18px;background:transparent}
   .board-top{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
   .board-title{font-size:15px;color:#9aa7b8;letter-spacing:2px}
   .board-title b{color:#fff;font-size:18px}
-  .wake-btn{padding:10px 14px;border-radius:999px;background:#1e293b;color:#e2e8f0;border:1px solid #475569;font-size:14px;font-weight:700}
+  .wake-btn{padding:10px 14px;border-radius:999px;background:rgba(255,255,255,.07);color:#e2e8f0;border:1px solid rgba(255,255,255,.16);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);font-size:14px;font-weight:700}
   .wake-btn.on{background:#166534;border-color:#22c55e;color:#bbf7d0}
   .board-top-btns{display:flex;gap:8px}
-  .endgame-btn{padding:10px 14px;border-radius:999px;background:#7f1d1d;color:#fecaca;border:1px solid #b91c1c;font-size:14px;font-weight:700}
+  .endgame-btn{padding:10px 14px;border-radius:999px;background:rgba(127,29,29,.55);color:#fecaca;border:1px solid rgba(248,113,113,.5);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);font-size:14px;font-weight:700}
   .endgame-btn.armed{background:#dc2626;border-color:#ef4444;color:#fff;animation:pulse 1s infinite}
-  .reset-btn{padding:10px 14px;border-radius:999px;background:#78350f;color:#fde68a;border:1px solid #b45309;font-size:14px;font-weight:700}
+  .reset-btn{padding:10px 14px;border-radius:999px;background:rgba(120,53,15,.55);color:#fde68a;border:1px solid rgba(251,191,36,.5);-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);font-size:14px;font-weight:700}
   .reset-btn.armed{background:#ea580c;border-color:#f97316;color:#fff;animation:pulse 1s infinite}
   .score-row{display:flex;align-items:center;justify-content:center;gap:28px;margin:8px 0 4px}
   .team{flex:1;text-align:center;min-width:0}
-  .team .name{font-size:clamp(28px,4.5vw,54px);font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;border-bottom:2px dashed #475569;padding-bottom:4px}
+  .team .name{font-size:clamp(28px,4.5vw,54px);font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;border-bottom:2px dashed rgba(255,255,255,.3);padding-bottom:4px}
   .team .name:active{color:#facc15}
   .team .total{font-size:clamp(72px,13vw,150px);font-weight:900;line-height:1;color:#fff;text-shadow:0 0 30px rgba(96,165,250,.35)}
   .team.away .total{color:#fde68a}
@@ -84,33 +84,33 @@
   .vs .half{font-size:clamp(18px,2.4vw,26px);color:#fbbf24;font-weight:900}
   .score-table-wrap{overflow-x:auto;margin:14px 0 10px}
   table.score-table{width:100%;border-collapse:collapse;font-size:clamp(16px,2.2vw,26px);text-align:center}
-  table.score-table th,table.score-table td{padding:10px 4px;border:1px solid #263244;min-width:44px}
-  table.score-table th{background:#111827;color:#9aa7b8}
-  table.score-table td{background:#0b1220;font-weight:800}
-  table.score-table td.total-cell{background:#1e293b;color:#facc15}
+  table.score-table th,table.score-table td{padding:10px 4px;border:1px solid rgba(255,255,255,.1);min-width:44px}
+  table.score-table th{background:rgba(255,255,255,.06);color:#9aa7b8}
+  table.score-table td{background:rgba(255,255,255,.04);font-weight:800}
+  table.score-table td.total-cell{background:rgba(250,204,21,.14);color:#facc15}
   table.score-table td.team-cell{text-align:left;padding-left:14px;cursor:pointer;min-width:110px}
   .board-bottom{display:flex;justify-content:space-between;align-items:center;gap:20px;flex-wrap:wrap;margin-top:6px}
   .bso{display:flex;gap:22px}
   .bso-group{text-align:center}
   .bso-group .label{font-size:16px;color:#9aa7b8;font-weight:800;margin-bottom:8px}
   .lamps{display:flex;gap:8px;justify-content:center}
-  .lamp{width:34px;height:34px;border-radius:50%;background:#1f2937;border:2px solid #475569}
+  .lamp{width:34px;height:34px;border-radius:50%;background:rgba(255,255,255,.07);border:2px solid rgba(255,255,255,.28);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
   .lamp.on-b{background:#22c55e;border-color:#86efac;box-shadow:0 0 18px #22c55e}
   .lamp.on-s{background:#eab308;border-color:#fde047;box-shadow:0 0 18px #eab308}
   .lamp.on-o{background:#ef4444;border-color:#fca5a5;box-shadow:0 0 18px #ef4444}
   .board-diamond{position:relative;width:190px;height:190px;flex:none}
-  .board-diamond .base{position:absolute;width:52px;height:52px;transform:rotate(45deg);border-radius:10px;background:#1f2937;border:4px solid #475569}
+  .board-diamond .base{position:absolute;width:52px;height:52px;transform:rotate(45deg);border-radius:10px;background:rgba(255,255,255,.07);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:4px solid rgba(255,255,255,.28)}
   .board-diamond .base.on{background:#facc15;border-color:#fde047;box-shadow:0 0 26px #facc15}
   .board-diamond .b2{top:0;left:69px}
   .board-diamond .b1{top:69px;right:0}
   .board-diamond .b3{top:69px;left:0}
-  .board-diamond .home{position:absolute;bottom:0;left:69px;width:52px;height:52px;transform:rotate(45deg);border-radius:10px;background:#334155;border:4px solid #64748b}
+  .board-diamond .home{position:absolute;bottom:0;left:69px;width:52px;height:52px;transform:rotate(45deg);border-radius:10px;background:rgba(255,255,255,.1);border:4px solid rgba(255,255,255,.35)}
   .board-note{text-align:center;color:#64748b;font-size:13px;margin-top:10px}
   .fx-test{background:none;border:none;color:#60a5fa;font-size:13px;text-decoration:underline;padding:0}
-  .games-box{margin-top:14px;background:#0b1220;border:1px solid #263244;border-radius:12px;padding:12px 14px}
+  .games-box{margin-top:14px;background:rgba(255,255,255,.06);-webkit-backdrop-filter:blur(18px) saturate(160%);backdrop-filter:blur(18px) saturate(160%);border:1px solid rgba(255,255,255,.14);border-radius:16px;padding:12px 14px;box-shadow:0 8px 28px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.12)}
   .games-title{font-size:16px;font-weight:800;margin-bottom:4px}
-  .game-item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-top:1px solid #1e293b;font-size:15px}
-  .game-dl{padding:6px 10px;border-radius:8px;background:#1e293b;color:#bfdbfe;border:1px solid #334155;font-size:13px;font-weight:700}
+  .game-item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-top:1px solid rgba(255,255,255,.1);font-size:15px}
+  .game-dl{padding:6px 10px;border-radius:8px;background:rgba(255,255,255,.07);color:#bfdbfe;border:1px solid rgba(255,255,255,.16);font-size:13px;font-weight:700}
   /* ---------- 全壘打特效（只在看板端） ---------- */
   #fwCanvas{position:fixed;inset:0;width:100vw;height:100vh;pointer-events:none;z-index:9998}
   #hrBanner{position:fixed;top:34%;left:0;right:0;text-align:center;pointer-events:none;z-index:9999;font-size:clamp(48px,9vw,110px);font-weight:900;color:#facc15;text-shadow:0 0 30px rgba(250,204,21,.8),0 4px 0 #b45309;opacity:0}
