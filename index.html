@@ -108,6 +108,7 @@
   .board-note{text-align:center;color:#64748b;font-size:13px;margin-top:10px}
   .fx-test{background:none;border:none;color:#60a5fa;font-size:13px;text-decoration:underline;padding:0}
   .games-box{margin-top:14px;background:rgba(255,255,255,.06);-webkit-backdrop-filter:blur(18px) saturate(160%);backdrop-filter:blur(18px) saturate(160%);border:1px solid rgba(255,255,255,.14);border-radius:16px;padding:12px 14px;box-shadow:0 8px 28px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.12)}
+  .board-card{margin:10px 0 6px;background:rgba(255,255,255,.06);-webkit-backdrop-filter:blur(18px) saturate(160%);backdrop-filter:blur(18px) saturate(160%);border:1px solid rgba(255,255,255,.14);border-radius:20px;padding:16px 18px 14px;box-shadow:0 8px 28px rgba(0,0,0,.3),inset 0 1px 0 rgba(255,255,255,.12)}
   .games-title{font-size:16px;font-weight:800;margin-bottom:4px}
   .game-item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-top:1px solid rgba(255,255,255,.1);font-size:15px}
   .game-dl{padding:6px 10px;border-radius:8px;background:rgba(255,255,255,.07);color:#bfdbfe;border:1px solid rgba(255,255,255,.16);font-size:13px;font-weight:700}
@@ -184,6 +185,7 @@
       <button class="wake-btn" id="wakeBtn">🌙 開啟防休眠</button>
     </div>
   </div>
+  <div class="board-card">
   <div class="score-row">
     <div class="team away">
       <div class="name" id="bAwayName" title="點一下改隊名">客隊</div>
@@ -209,6 +211,7 @@
       <div class="base b3" data-base="third"></div>
       <div class="home"></div>
     </div>
+  </div>
   </div>
   <div class="board-note" id="bLastAction">還沒有操作</div>
   <div class="board-note">局數無上限，延長賽自動加欄 · 由手錶控制器即時同步 · <button class="fx-test" id="testFx">🎆 測試全壘打特效</button> · <a href="./" style="color:#60a5fa">回首頁</a></div>
